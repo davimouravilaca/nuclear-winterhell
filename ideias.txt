@@ -1,8 +1,12 @@
 nome: nuclear winterhell
 sobre: rpg com tematica posapocaliptica inspirada em mad max e fallout
+
 sistemas: 
 seleção de classes: as classes serão desenvolvidas ao longo do game. se vc selecionar por exemplo a classe void hunter vc não será um void hunter apenas receberá as missões com objetivo de se tornar um.
 sistema de crafting e coleta de recursos etc.
 seleção de equipamentos e etc.
+
 lore: em 2042 um evento misterioso fez com que todas as ogivas nucleares do mundo fossem acionadas simultaneamente causando a destruição global do planeta. Muito tempo depois surgiram-se algumas comunidades de sobreviventes que desenvolveram uma tecnologia que e capaz de criar bolhas anti radiação onde puderam-se plantar e coisas do tipo, essa tecnologia funciona a partir de geradores e por isso a gasolina é muito importante pra essa nova civilação. Enquanto isso muitos seres estranhos habitam fora dessas zonas seguras. Facções inimigas etc. Os void hunters tem a missão de explorar as ruinas do mundo com intenção de capturar recursos para a comunidade entretanto eles enfrentam diversos perigos. 
-roteiro: o game começa com a classica fala de robbert oppenheimer "now i become death, the destroyer of worlds" seguida por diversas imagens de bombas atomicas.
+
+roteiro: o game começa com a classica fala de robbert oppenheimer "now i become death, the destroyer of worlds" seguida por diversas imagens de bombas atomicas sendo explodidas ao redor do planeta. Logo em seguida e mostrado uma pequena fazenda. Tempestades radioativas estão acontecendo e o protagonista precisa sair para consertar os geradores dando inicio ao começo do game. O player terá a sua própria fazenda e a cada missão eventos no mundo poderão transformar sua fazenda tipo vc pode encontrar um npc e recrutar ele assim ele irá trabalhar pra vc, comprar novas sementes ai vc poderá colher os itens e carregar em suas proximas missões etc.
+

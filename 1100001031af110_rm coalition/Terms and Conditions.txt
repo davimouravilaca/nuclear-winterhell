@@ -1,0 +1,135 @@
+
+                                                                        
+                                                                        
+RRRRRRRRRRRRRRRRR   MMMMMMMM               MMMMMMMM        CCCCCCCCCCCCC
+R::::::::::::::::R  M:::::::M             M:::::::M     CCC::::::::::::C
+R::::::RRRRRR:::::R M::::::::M           M::::::::M   CC:::::::::::::::C
+RR:::::R     R:::::RM:::::::::M         M:::::::::M  C:::::CCCCCCCC::::C
+  R::::R     R:::::RM::::::::::M       M::::::::::M C:::::C       CCCCCC
+  R::::R     R:::::RM:::::::::::M     M:::::::::::MC:::::C              
+  R::::RRRRRR:::::R M:::::::M::::M   M::::M:::::::MC:::::C              
+  R:::::::::::::RR  M::::::M M::::M M::::M M::::::MC:::::C              
+  R::::RRRRRR:::::R M::::::M  M::::M::::M  M::::::MC:::::C              
+  R::::R     R:::::RM::::::M   M:::::::M   M::::::MC:::::C              
+  R::::R     R:::::RM::::::M    M:::::M    M::::::MC:::::C              
+  R::::R     R:::::RM::::::M     MMMMM     M::::::M C:::::C       CCCCCC
+RR:::::R     R:::::RM::::::M               M::::::M  C:::::CCCCCCCC::::C
+R::::::R     R:::::RM::::::M               M::::::M   CC:::::::::::::::C
+R::::::R     R:::::RM::::::M               M::::::M     CCC::::::::::::C
+RRRRRRRR     RRRRRRRMMMMMMMM               MMMMMMMM        CCCCCCCCCCCCC
+                                                                        
+
+RM Coalition Mega Pack
+Released on Steam 2-26-14
+
+List of resources sorted by creator and type:
+
+ == Andinator ==
+- Characters
+  . $HanSolo
+
+ == Hyde ==
+- Music
+  . Aftermath
+  . Back for Round Two
+  . Cool Island Breeze
+  . Drums of War
+  . Final Faceoff
+  . Forest of the Lunar Elves (Ambient)
+  . Future Tech
+  . Hero of the Golden Age
+  . Hitten the Road Again
+  . Let the Show Begin
+  . Paranormal
+  . That Time of Year
+  . The Beast in the Cave
+  . The Final Chapter
+  . The Moon Without Stars
+- Pictures
+  . Cloud1
+- System
+  . SkullBlue
+  . SkullGreen
+  . SkullMono
+  . SkullRed
+  . SkullSepia
+  . IconSet
+    Icons on row 1 found in original graphic(s): firstfive
+- Tilesets
+  . HydeTileA2
+    Created with parts from the graphic(s): DirtAutoTile, GrassAutoTile, GrassDirtAutoTile
+  . HydeTileA4
+    Created with parts from the graphic(s): BlueStripeAutoTile, GreenStripeAutoTile, MahoganyDarkWallpaperAutoTile, MahoganyWallpaperAutoTile, RedStripeAutoTile, YellowStripeAutoTile
+  . HydeTileA5
+    Created with parts from the graphic(s): ConcreteFloor, ConcreteFloorbig, RustFloor
+  . HydeTileC
+    Created with parts from the graphic(s): CourtBBall, GuitarAmp, Kingdom, LargeOasis, ModernTower
+- Titles1
+  . Coast
+
+  == Kevvviiinnn ==
+- Music
+  . Action 1
+  . Area 2
+  . Battle 2
+  . Battle 3 (Arrange)
+  . Battle 3
+  . Character 1
+  . Character 3
+  . Character 5
+  . Character 6
+  . Desert 1
+  . Flair and Whimsy
+  . Field 1
+  . Hurry! 1
+  . Jingle 1
+  . Market 1
+  . Memories 1
+  . Memories 2
+  . Overworld 4
+  . Piano-Organ Piece
+  . Sadness 6
+  . Town 11
+  . Town 12
+  . Town 13
+  . Strike Down the Demon
+
+  == Maus Merryjest ==
+- Pictures
+  . LoveIsInTheAirFinal
+  . LoveIsInTheAirFinal2
+
+  == Neon Black ==
+- Characters
+  . $CPRod
+  . CPFish
+- Pictures
+  . Key
+  . Lock
+  . Pick
+- Scripts
+  . Extra Page Conditions
+  . Jukebox
+  . Effects/Features Module
+  . Item Effects Boxes
+  . Lockpicking
+  . Relationships
+- System
+  . EffectsWindow
+
+  == PandaMaru ==
+- Tilesets
+  . PandamaruTileB
+    Created with parts from the graphic(s): weihnachtsmarkt
+
+
+
+
+Conditions for Use:
+
+All tracks in this package are able to be used both commercially and non-commercially, with the understanding and following of set rules. 
+
+A. All resources must be credited to both the Original Creator/Artist (all listed above), and to the RM Coalition. 
+B. All resources must remain unedited unless the original creator/artist gives further permission.
+C. You must also follow any and all rules set by each individual creator on top of this rule list. Different Rules and Terms/Conditions for each creator can be found above along with their materials. 
+D. Rules set by indicidual creators regarding the allowance of their works to be used commercially take priority over this document. If they say that their work can NOT be used commercially, that is the final say and can not be challenged unless they so choose to change their rule. Please read through each artist's/Creator's rules that can be found in their respective section of the list.
