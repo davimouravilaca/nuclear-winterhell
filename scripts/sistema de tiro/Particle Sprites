@@ -1,0 +1,482 @@
+module Particle_Sprites
+  
+  class Area < Game_Character
+    
+    include Module_Of_Config
+    attr_accessor :sprite
+    
+    def initialize(character, final_x, final_y, view)
+      super(); @character, @fx, @fy = character.clone, final_x, final_y; @view = view
+      @move_speed = 7
+      @move_frequency = 3
+      @through = true
+      @sprite = Sprite_Character.new(view,self)
+      set_graphic(AreaChar, 0); @disposed = false
+      moveto(@character.x, @character.y); set_direction @character.direction
+      update
+    end
+    
+    def update
+      return if disposed?
+      @sprite.update if not @sprite.disposed?
+      if !destination_reached?
+        move_straight(@direction)
+        SceneManager.scene.spriteset.smoke.push(Smoke.new(@x, @y, @view))
+      else
+        dispose
+      end
+    end
+    
+    def destination_reached?
+      return true if @x == @fx and @y == @fy
+      return false
+    end
+    
+    def dispose
+      @disposed = true
+      @sprite.dispose if not @sprite.disposed?
+      @sprite = nil
+    end
+    
+    def disposed?
+      @disposed
+    end
+  end
+  
+  class Shot < Sprite
+    
+    include Module_Of_Config
+    
+    def initialize(character, parts_array, view)
+      super(view); @character = character; @direction = character.direction
+      case @direction
+      when 2; self.bitmap = Shot_Bit[:y]
+      when 4; self.bitmap = Shot_Bit[:x]
+      when 6; self.bitmap = Shot_Bit[:x]
+      when 8; self.bitmap = Shot_Bit[:y]
+      end
+      self.ox, self.oy = 16,16
+      self.x, self.y = character.screen_x, character.screen_y - 8
+      @parts = parts_array
+      @disposer = Game_Character.new
+      @disposer.moveto(@character.x, @character.y)
+      @disposer.set_direction(@direction)
+      get_speed; update
+    end
+    
+    def update
+      return if self.disposed?
+      case @disposer.direction
+      when 2
+        @disposer.moveto(@disposer.x, @disposer.y + 1)
+        if !@disposer.map_passable?(@disposer.x, @disposer.y, @disposer.direction) or @disposer.collide_with_characters?(@disposer.x, @disposer.y) or $game_map.terrain_tag(@disposer.x, @disposer.y) == 1 and $game_map.counter?(@disposer.x, @disposer.y) != true
+          dispose; return
+        end
+      when 4
+        @disposer.moveto(@disposer.x - 1, @disposer.y)
+        if !@disposer.map_passable?(@disposer.x, @disposer.y, @disposer.direction) or @disposer.collide_with_characters?(@disposer.x, @disposer.y) or $game_map.terrain_tag(@disposer.x, @disposer.y) == 1 and $game_map.counter?(@disposer.x, @disposer.y) != true
+          dispose; return
+        end
+      when 6
+        @disposer.moveto(@disposer.x + 1, @disposer.y)
+        if !@disposer.map_passable?(@disposer.x, @disposer.y, @disposer.direction) or @disposer.collide_with_characters?(@disposer.x, @disposer.y) or $game_map.terrain_tag(@disposer.x, @disposer.y) == 1 and $game_map.counter?(@disposer.x, @disposer.y) != true
+          dispose; return
+        end
+      when 8
+        @disposer.moveto(@disposer.x, @disposer.y - 1)
+        if !@disposer.map_passable?(@disposer.x, @disposer.y, @disposer.direction) or @disposer.collide_with_characters?(@disposer.x, @disposer.y) or $game_map.terrain_tag(@disposer.x, @disposer.y) == 1 and $game_map.counter?(@disposer.x, @disposer.y) != true
+          dispose; return
+        end
+      end
+      self.x += @vx
+      self.y += @vy
+      self.opacity > 0 ? self.opacity -= 25 : dispose
+      create_new_parts
+    end
+    
+    def get_speed
+      case @direction
+      when 2
+        @vx = 0
+        @vy = 25
+      when 4
+        @vx = -25
+        @vy = 0
+      when 6
+        @vx = 25
+        @vy = 0
+      when 8
+        @vx = 0
+        @vy = -25
+      end
+    end
+    
+    def create_new_parts
+      return if self.disposed?
+      3.times do
+        case @direction
+        when 2
+          vx = 0
+          vy = 1
+        when 4
+          vx = -1
+          vy = 0
+        when 6
+          vx = 1
+          vy = 0
+        when 8
+          vx = 0
+          vy = -1
+        end
+        @parts.push(Part.new(self, self.viewport, vx, vy))
+      end
+    end
+    
+    def dispose
+      super
+      @disposer = nil
+    end
+  end
+  
+  class Part < Sprite
+    
+    def initialize(sprite, view, vx, vy)
+      super(view); @sprite = sprite
+      self.bitmap = Bitmap.new(2,2)
+      self.bitmap.fill_rect(0,0,2,2,Color.new(255,216,0))
+      rx, ry = rand(12) - 6, rand(12) - 6
+      self.x, self.y = sprite.x + rx, sprite.y + ry
+      @vx, @vy = vx, vy
+      update
+    end
+    
+    def update
+      return if self.disposed?
+      self.x += @vx
+      self.y += @vy
+      self.opacity > 0 ? self.opacity -= 8 : dispose
+    end
+  end
+  
+  class Melee < Sprite
+    
+    include Module_Of_Config
+    
+    def initialize(character, view)
+      @character = character.clone
+      super(view)
+      self.bitmap = Melee_Bit
+      self.z = 60; self.blend_type = 1
+      self.ox, self.oy = 16,16
+      self.x, self.y = @character.screen_x, @character.screen_y - 8
+      character!
+      update
+    end
+    
+    def update
+      return if disposed?
+      self.opacity > 0 ? self.opacity -= 6 : dispose
+    end
+    
+    def character!
+      case @character.direction
+      when 2
+        self.y += 8
+        self.angle = 180
+      when 4
+        self.x -= 8
+        self.angle = 90
+      when 6
+        self.x += 8
+        self.angle = 270
+      when 8
+        self.y -= 8
+        self.angle = 0
+      end
+    end
+  end
+  
+  class Explosion < Sprite
+  
+    include Module_Of_Config
+    attr_reader :event
+    
+    def initialize(x, y, viewport)
+      super(viewport)
+      @phase = 0; @timer = 30
+      @event = Game_Character.new
+      @event.moveto(x,y)
+      self.z = 999
+      self.bitmap = Bitmap.new(128,128)
+      self.ox = 64; self.oy = 64
+      self.x, self.y = @event.screen_x, @event.screen_y - 32
+      RPG::SE.new(Explosion_SE, 100).play
+      self.blend_type = Blend_Type
+      self.bitmap.blt(0,0,Explosion_Bit,Rect.new(128 * @phase,0,128,128))
+      self.viewport.flash(Color.new(255,105,0,190),30) if Flash
+      @event = nil
+      create_fragments
+      update
+      self.viewport.flash(Color.new(234,96,0),25)
+    end
+    
+    def create_fragments
+      @fragments = []
+      for i in 0..Fragments - 1
+        @fragments.push(Fragment.new(self.x, self.y, self.viewport))
+      end
+      @fragments.compact
+    end
+    
+    def update_fragments
+      trash = []
+      @fragments.each {|sprite|
+        sprite.update
+        trash.push(sprite) if sprite.disposed?
+      }
+      trash.each {|item| @fragments.delete(item) if @fragments.include?(item)}
+    end
+    
+    def update
+      return if self.disposed?
+      update_fragments
+      self.bitmap.clear
+      case @timer
+      when 30
+        @phase = 0
+      when 27
+        @phase = 1
+      when 24
+        @phase = 2
+      when 21
+        @phase = 3
+      when 18
+        @phase = 4
+      when 15
+        @phase = 5
+      when 12
+        @phase = 6
+      when 9
+        @phase = 7
+      when 6
+        @phase = 8
+      when 3
+        @phase = 9
+      when 0
+        self.dispose
+      end
+      if @timer == 0
+        self.dispose if not self.disposed?
+        return
+      end
+      @timer -= 1
+      self.bitmap.blt(0,0,Explosion_Bit,Rect.new(128 * @phase,0,128,128))
+    end
+    
+    def dispose
+      super
+      return if @fragments.nil?
+      if !@fragments.empty?
+        @fragments.each {|frag|
+          frag.dispose if not frag.disposed?
+        }
+        @fragments.clear
+      end
+    end
+  end
+
+  class Fragment < Sprite
+    
+    include Module_Of_Config
+    
+    def initialize(x, y, viewport)
+      super()
+      self.viewport = viewport
+      r = rand(15)
+      self.bitmap = Bitmap.new(32,32)
+      self.z = 0
+      self.bitmap.blt(0,0,Fragment_Bit,Rect.new(32 * r,0,32,32))
+      self.blend_type = 2
+      @vx, @vy = rand(Frag_Vel) - (Frag_Vel/2).to_i, rand(Frag_Vel) - (Frag_Vel/2).to_i
+      self.x, self.y = x - 16, y - 16
+    end
+    
+    def update
+      return if self.disposed?
+      self.x += @vx
+      self.y += @vy
+      self.opacity -= 9
+    end
+  end
+
+  class Smoke < Sprite
+    
+    include Module_Of_Config
+    
+    def initialize(x, y, viewport)
+      @event = Game_Character.new
+      @event.moveto(x,y)
+      super(viewport)
+      self.bitmap = Smoke_Bit
+      self.blend_type = 2
+      self.opacity = 150
+      self.z = 999 - 5
+      self.x, self.y = @event.screen_x - 16, @event.screen_y - 32 - 16
+      @event = nil
+      @vx, @vy = rand(4) - 2, rand(4) - 2
+      @vx = 1 if @vx == 0; @vy = 1 if @vy == 0
+      @move_freq = Smoke_Freq
+      update
+    end
+    
+    def update
+      return if self.disposed?
+      if @move_freq > 0
+        @move_freq -= 1
+      else
+        @move_freq = Smoke_Freq
+        self.x += @vx
+        self.y += @vy
+      end
+      self.opacity > 0 ? self.opacity -= 2 : dispose
+    end
+  end
+  
+  class Smoke2 < Sprite
+    
+    include Module_Of_Config
+    
+    def initialize(character, viewport)
+      @character = character.clone
+      direction = character.direction
+      super(viewport)
+      self.bitmap = Smoke_Bit
+      self.blend_type = 2
+      self.opacity = 150
+      self.z = 0
+      self.zoom_x, self.zoom_y = 0.3, 0.3
+      case direction
+      when 2
+        self.x, self.y = @character.screen_x - 9, @character.screen_y + 6
+      when 4
+        self.x, self.y = @character.screen_x - 26, @character.screen_y - 19
+      when 6
+        self.x, self.y = @character.screen_x + 9, @character.screen_y - 21
+      when 8
+        self.x, self.y = @character.screen_x - 9, @character.screen_y - 36
+      end
+      @vx, @vy = rand(4) - 2, rand(4) - 2
+      @vx = 1 if @vx == 0; @vy = 1 if @vy == 0
+      @move_freq = Smoke_Freq + 2
+      update
+    end
+    
+    def update
+      return if self.disposed?
+      if @move_freq > 0
+        @move_freq -= 1
+      else
+        @move_freq = Smoke_Freq + 2
+        self.x += @vx
+        self.y += @vy
+      end
+      self.opacity > 0 ? self.opacity -= 4 : dispose
+    end
+  end
+
+  class Floor < Sprite
+    
+    attr_reader :event_x
+    attr_reader :event_y
+    
+    def initialize(x,y,viewport)
+      @event_x, @event_y = x,y
+      super(viewport)
+      self.z = 0
+      self.ox, self.oy = 16,16
+      self.bitmap = Module_Of_Config::Floor_Bit
+      @event = Game_Character.new
+      @event.moveto(x,y)
+      self.x, self.y = @event.screen_x, @event.screen_y - 8
+      self.z = @event.screen_z
+    end
+    
+    def update
+      self.x = @event.screen_x if self.x != @event.screen_x
+      self.y =  @event.screen_y - 8 if self.y != @event.screen_y - 8
+      self.z = @event.screen_z if self.z != @event.screen_z
+    end
+  end
+
+  class PlayerWeapon < Sprite
+    
+    Sprite_z_values = { 2=>120, 4=>50, 6=>120, 8=>50}
+    Sprite_Mirror = {2=>false,4=>false,6=>true,8=>false}
+    
+    Sprite_Angles = {2=>100, 4=>20, 6=>340, 8=>100}
+    Move_correction = {2=>[2,-4],4=>[-7,-10],6=>[8,-14],8=>[-2,-18]}
+
+    def initialize(view)
+      super(view)
+      self.bitmap = Bitmap.new(24,24)
+      self.ox, self.oy = 12,12
+      icon = $game_player.equipped_weapon.weapon.icon_index
+      self.bitmap.blt(0,0,Cache.system("Iconset"), Rect.new(icon%16*24,icon/16*24,24,24))
+      update
+    end
+    
+    def update
+      self.x = $game_player.screen_x + Move_correction[$game_player.direction][0]
+      self.y = $game_player.screen_y + Move_correction[$game_player.direction][1]
+      self.z = Sprite_z_values[$game_player.direction]
+      self.angle = Sprite_Angles[$game_player.direction]
+      self.mirror = Sprite_Mirror[$game_player.direction]
+    end
+  end
+  
+  class Blood < Sprite
+    
+    include Module_Of_Config
+    
+    def initialize(target, direction, view)
+      @target, @direction = target, direction
+      super(view)
+      self.bitmap = Bitmap.new(32,32)
+      rand = rand(7) + 3
+      self.bitmap.blt(0,0,Blood_Bit, Rect.new(32 * rand,0,32,32))
+      self.ox, self.oy = 16,16
+      self.x, self.y = @target.screen_x, @target.screen_y - 8
+      self.z = 30
+      get_speed
+      update
+    end
+    
+    def update
+      return if self.disposed?
+      return if @vx.nil? or @vy.nil?
+      if @target.nil?
+        dispose; return
+      end
+      self.x += @vx
+      self.y += @vy
+      self.opacity > 0 ? self.opacity -= 6 : dispose
+    end
+    
+    def get_speed
+      case @direction
+      when 2
+        @vx = rand(4) - 2
+        @vy = rand(4)
+      when 4
+        @vx = -rand(4)
+        @vy = rand(4) - 2
+      when 6
+        @vx = rand(4)
+        @vy = rand(4) - 2
+      when 8
+        @vx = rand(4) - 2
+        @vy = -rand(4)
+      end
+    end
+  end
+end

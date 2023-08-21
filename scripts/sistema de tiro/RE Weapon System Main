@@ -1,0 +1,1059 @@
+#==============================================================================
+# Resident Evil Like Weapons System
+#==============================================================================
+#------------------------------------------------------------------------------
+# Créditos: Leon-S.K --- ou --- AndreMaker --- ou --- 4ndreMTM
+#------------------------------------------------------------------------------
+#
+# Para Criar um inimigo, coloque o comentario em um evento:
+#    - enemy_id=  E coloque o ID do inimigo na database
+# Para adicionar um comando quando o inimigo morrer, coloque o comentario
+#   Die Erase           - Ira apagar o inimigo
+#   Die Switch Local X  - Ira ativar a switch local x
+#   Die Switch X        - Ira ativar a switch
+#
+#  Você pode criar um objeto, colocando um comentario no evento
+#       - object command
+#
+#    E SUBSTITUA command por :
+#       Self X    - Ativa a switch local x
+#       Switch X  - Ativa a swich X
+#       Start     - Executa tudo após o comentario
+#
+#    Exemplo:
+#       - Object Self A
+#
+#    Outro Exemplo:
+#       - Object Switch 20
+#
+# Para o Inimigo no database, coloque nos comentarios
+#          animation_id= id da animação
+#  Para definir uma animação de ataque
+#
+#     Você ainda pode criar uma arma com dano em area ou que atravessa mais
+#   de um inimigo. 
+#           
+#           Para fazer-lo coloque no comentario da arma:
+#
+#      Adicione "area" para criar uma arma com efeito de area(explosao)
+#      Adicione "pierce x" e troque x para quantos inimigos quiser atravessar
+#
+#  Para colocar as armas no script, visite "weapons room"
+#------------------------------------------------------------------------------
+#==============================================================================
+
+ 
+module Module_Of_Config
+  
+  #------------------------------------------------------------------------------
+  # CONFIGURAÇÕES GERAIS
+  #------------------------------------------------------------------------------
+  
+  Default_Animation = 1 # Animação padrao de tiro (quando a arma nao tiver)
+  Opacity_Burn = 10     # A velocidade que a opacidade diminui quando morto
+  Enemy_Recover = 60    # Recover do inimigo (padrao = 60)
+  Attack_Key = :X       # Tecla de Tiro
+  Reload_Key = :Y       # Tecla de Reload
+  Pierce_Enemies = 1    # Quantos inimigos a bala pode atravessar (padrao 1)
+  Move_Type_Custom = false   # true se quiser que o inimigo ande conforme abaixo
+  Move_Type_Near = 2     # A velocidade do inimigo quando perto (max 5)
+  Move_Type_Far = 1      # A velocidade do inimigo quando longe (max 5) 
+  Die_SE = "Monster6"    # SE tocado quando o inimigo Morre
+  Player_Die_SE = "die_abyss"    # SE tocado quando o player morre
+  
+  Show_Damage_Sprites = true    # Mostrar valor do dano no alvo
+  Show_Melee_Sprites  = true    # Mostrar sprites de armas melee (facas, etc)
+  Show_Weapon_Sprites = true    # Mostrar sprites de armas (pistolas, etc)
+  Show_Smoke_On_Fire  = true    # Mostrar sprites de fumaça ao atirar
+  Show_Blood_Anim     = true    # Mostrar sangue
+  
+  #  Se os tiros estiverem passando por um tile que não pode ser passavel, marque
+  # o tile com o numero abaixo...
+  Terrain_Debug = 1
+  
+  
+  Flash = true
+  Floor = true
+  
+  Melee_Wav_Name = "knife_hit"
+    
+  Explosion_SE  = "Explosion2"
+  Blend_Type    = 1
+  
+  Fragments     = 10
+  Frag_Vel      = 9
+  
+  Smokes        = 2
+  Smoke_Vel     = 2
+  Smoke_Freq    = 3
+  
+  Shot_Bit = {}
+  AreaChar      = "$!rocket"
+  Floor_Bit     = Bitmap.new("Graphics/Particles/floor")
+  Explosion_Bit = Bitmap.new("Graphics/Particles/explosion")
+  Fragment_Bit  = Bitmap.new("Graphics/Particles/fragments")
+  Smoke_Bit     = Bitmap.new("Graphics/Particles/smoke")
+  Blood_Bit     = Bitmap.new("Graphics/Particles/blood")
+  Melee_Bit     = Bitmap.new("Graphics/Particles/knifeslash")
+  Shot_Bit[:x]  = Bitmap.new("Graphics/Particles/shot_x")
+  Shot_Bit[:y]  = Bitmap.new("Graphics/Particles/shot_y")
+
+#----------------------------------------------------------------------------------#
+
+end
+
+  #------------------------------------------------------------------------------
+  # AREA NAO EDITAVEL - APENAS SE SABE OQUE ESTA FAZENDO =D
+  #------------------------------------------------------------------------------
+  
+class Game_Map
+  attr_accessor :enemies
+  attr_accessor :damage_sprites
+  attr_accessor :item_windows
+  attr_accessor :explosion_chars
+  alias abs_setup setup
+  def setup(map_id)
+    @enemies.nil? ? @enemies = [] : @enemies.clear
+    @item_windows.nil? ? @item_windows = [] : @item_windows.clear
+    abs_setup(map_id)
+  end
+  def window(type)
+    @item_windows.push(type)
+  end
+end
+#----------------------------------------------------------------------------------#
+class Game_Event < Game_Character
+  include Module_Of_Config
+  attr_reader :enemy
+  attr_reader :object
+  attr_reader :not_blood
+  alias abs_setup_page_settings setup_page_settings
+  alias abs_initialize initialize
+  alias abs_update update
+  alias abs_start start
+  alias abs_movement update_self_movement
+  alias abs_erase_enemy erase
+  def initialize(map_id, event)
+    @enemy = nil
+    @recover = 0; @timer = 0
+    abs_initialize(map_id, event)
+  end
+  def setup_page_settings
+    abs_setup_page_settings
+    check_enemy
+  end
+  def update_self_movement
+    if @enemy != nil and Move_Type_Custom == true
+      if near_the_player?
+        @move_type = Move_Type_Near
+        abs_movement
+      else
+        @move_type = Move_Type_Far
+        abs_movement
+      end
+    else
+      abs_movement
+    end
+  end
+  def check_enemy
+    if !@enemy.nil?
+      @enemy = nil
+      $game_map.enemies.delete(self)
+    elsif !@object.nil?
+      @object = nil
+      $game_map.enemies.delete(self)
+    end
+    return if @list.nil?
+    @list.each do |command|
+      next if not command.code == 108 or command.code == 408
+      if @enemy.nil?
+        if command.parameters[0].downcase.include?("enemy_id=")
+          id = command.parameters[0].sub("enemy_id=","")
+          @enemy = ABS_Enemy.new(id.to_i)
+          @trigger = 2
+          $game_map.enemies.push(self)
+          print "Enemy #{@enemy.enemy.name} criado \n"
+        elsif command.parameters[0].downcase.include?("object")
+          die_com = command.parameters[0].downcase.sub("object ", ""); die_com.downcase!
+          if die_com.include?("self ")
+            switch = die_com.downcase.sub('self ','')
+            switch.downcase!
+            switch = check_switch_string(switch)
+          elsif die_com.include?("switch ") and !die_com.include?('local')
+            switch = die_com.downcase.sub('switch ','')
+            switch = switch.to_i
+          elsif die_com.include?('Start')
+            switch = true
+          else
+            switch = true
+          end
+          @object = ABS_Object.new(switch)
+          $game_map.enemies.push(self)
+          print "Objeto criado com switch #{@object.switch} \n"
+        end
+      else
+        if command.parameters[0].downcase.include?("die")
+          cmd = command.parameters[0].downcase
+          if cmd == "die erase"
+            @enemy.die = 0
+          elsif cmd.include?("die switch local")
+            @enemy.die = 1
+            maqoe = cmd.sub("die switch local ",'')
+            @enemy.switch = check_switch_string(maqoe)
+          elsif cmd.include?("die switch")
+            @enemy.die = 2
+            maqoe = cmd.sub("die switch ", '')
+            @enemy.switch = maqoe.to_i
+          else
+            @enemy.die = 0
+          end
+          print "Enemy #{@enemy.enemy.name} die command is #{@enemy.die} \n"
+        else
+          next
+        end
+      end
+    end
+  end
+  def check_switch_string(string)
+    if string.include?('a')
+      return "A"
+    elsif string.include?('b')
+      return "B"
+    elsif string.include?('c')
+      return "C"
+    elsif string.include?('d')
+      return "D"
+    end
+    return nil
+  end
+  def start_object
+    print "Object Started! \n"
+    if @object.switch.is_a?(String)
+      key = [$game_map.map_id, self.id, @object.switch]
+      $game_self_switches[key] ? $game_self_switches[key] = false : $game_self_switches[key] = true
+      print "Switch Local #{@object.switch} == #{$game_self_switches[key]} \n"
+    elsif @object.switch.is_a?(TrueClass)
+      @object = nil
+      $game_map.enemies.delete(self)
+      self.start
+    else
+      $game_switches[@object.switch] ? $game_switches[@object.switch] = false : $game_switches[@object.switch] = true
+    end
+  end
+  def erase
+    @character_name = ''
+    @priority_type = 1
+    moveto(0,0)
+    abs_erase_enemy
+  end
+  def damage_enemy(value)
+    if !@object.nil?
+      start_object
+      return
+    end
+    value -= (rand(10) - 5)
+    value -= @enemy.defense
+    value == 0 if value < 0
+    last_speed = @move_speed
+    last_freq = @move_frequency
+    @move_speed = 5
+    @move_frequency = 5
+    jump(0,0)
+    $game_map.damage_sprites.push(Damage_Sprite.new(self, value)) if Show_Damage_Sprites == true
+    @enemy.hp -= value
+    if @enemy.hp <= 0
+      $game_map.enemies.delete(self)
+      RPG::SE.new(Die_SE, 80).play
+      Audio.se_play('Audio/Se/Blow6', 90, 100)
+      expp = @enemy.enemy.exp
+    end
+    @move_speed = last_speed
+    @move_frequency = last_freq
+  end
+  def update
+    @not_blood = (@object.nil? ? false : true) if @not_blood.nil?
+    if @enemy != nil
+      @recover -= 1 if @recover > 0
+      x, y = distance_x_from($game_player.x).abs, distance_y_from($game_player.y).abs
+      if x + y <= 1
+        move_toward_character($game_player) if !moving?
+      end
+      update_kill if @enemy.hp <= 0
+    end
+    abs_update
+  end
+  def update_kill
+    if @opacity > 0
+      @opacity -= Module_Of_Config::Opacity_Burn
+    else
+      case @enemy.die
+      when 0
+        print "Erased enemy #{@enemy.enemy.name}\n"
+        self.erase
+        @enemy = nil
+      when 1
+        key = [$game_map.map_id, self.id, @enemy.switch]
+        if $game_self_switches[key] == true
+          $game_self_switches[key] = false
+        else
+          $game_self_switches[key] = true
+        end
+        @opacity = 255
+      when 2
+        $game_switches[@enemy.switch] ? $game_switches[@enemy.switch] = false : $game_switches[@enemy.switch] = true
+        @opacity = 255
+      end
+      @enemy = nil if !@enemy.nil?
+    end
+  end
+  def start
+    if @object.nil?; abs_start; else; abs_start if !@object.switch.is_a?(TrueClass); end
+    if @enemy.nil?
+      abs_start
+    else
+      ax = @x - $game_player.x
+      ay = @y - $game_player.y
+      turn_toward_player if check_really_near and !moving?
+      case @direction
+      when 2
+        attack if ax == 0 and ay == -1
+      when 4
+        attack if ay == 0 and ax == 1
+      when 6 
+        attack if ay == 0 and ax == -1
+      when 8
+        attack if ax == 0 and ay == 1
+      end
+    end
+  end
+  def check_really_near
+    sx = distance_x_from($game_player.x).abs
+    sy = distance_y_from($game_player.y).abs
+    return true if sx + sy < 3
+  end
+  def attack
+    return if @enemy.hp == 0 or @recover > 0
+    @recover = Module_Of_Config::Enemy_Recover
+    SceneManager.scene.spriteset.blood($game_player, @direction)
+    value = @enemy.attack
+    r = rand(20)
+    factor = r - 10
+    value += factor
+    $game_player.damage_hero(value)
+    SceneManager.scene.spriteset.melee(self)
+  end
+end
+#----------------------------------------------------------------------------------#
+class ABS_Object
+  attr_accessor :switch
+  def initialize(die_com)
+    @switch = die_com
+  end
+end
+#----------------------------------------------------------------------------------#
+class ABS_Enemy
+  include Module_Of_Config
+  attr_accessor :enemy
+  attr_accessor :hp
+  attr_accessor :attack
+  attr_accessor :defense
+  attr_accessor :die
+  attr_accessor :switch
+  attr_reader :name
+  attr_reader :animation
+  def initialize(id)
+    @enemy = Game_Enemy.new(0, id)
+    @name = @enemy.name
+    @die = 0, @switch = nil
+    note = @enemy.enemy.note
+    if note.include?("animation=")
+      aid = note.sub("animation=","")
+      @animation = aid.to_i
+    else
+      @animation = Default_Animation
+    end
+    @hp = enemy.mhp
+    @attack = enemy.atk
+    @defense = enemy.def
+  end
+end
+#----------------------------------------------------------------------------------#
+class Game_Player < Game_Character
+  include Module_Of_Config
+  attr_accessor :kill_player
+  attr_accessor :equipped_weapon
+  attr_accessor :real_vis_character_name
+  attr_accessor :real_vis_character_index
+  attr_accessor :bullets_hash
+  attr_reader   :aiming
+  alias abs_initialize initialize
+  alias abs_update update
+  alias abs_movable movable?
+  def initialize
+    @recover = 0
+    @kill_player = false; @need_check = true
+    @real_vis_character_name = @character_name
+    @real_vis_character_index = @character_index
+    abs_initialize
+  end
+  def update
+    @recover -= 1 if @recover > 0
+    re_check_equipped_weapon if @need_check == true
+    if not @equipped_weapon == nil
+      @need_check = true if not @need_check = true
+      if Input.press?(Attack_Key) and @recover == 0
+        if not @equipped_weapon.bullets == 0
+          @equipped_weapon.area == true ? update_attack(true) : update_attack
+          return
+        else
+          Audio.se_play("Audio/SE/#{@equipped_weapon.wav_name}_no_ammo", 100, 130)
+          @recover = @equipped_weapon.recover
+        end
+      end
+      if Input.trigger?(Reload_Key)
+        if @equipped_weapon.bullets == 0
+          reload(@equipped_weapon)
+        else
+          Audio.se_play("Audio/Se/Buzzer1", 80, 100)
+        end
+      end
+    else
+      if Input.press?(Attack_Key)
+        update_melee if @recover == 0
+      end
+    end
+    update_kill if @kill_player
+    abs_update
+  end
+  
+  def update_melee
+    actor = $game_party.members[0]
+    @recover = 60
+    if actor.weapons[0] != nil and Show_Melee_Sprites
+      SceneManager.scene.spriteset.weapon(self, actor.weapons[0].icon_index)
+    end
+    SceneManager.scene.spriteset.melee(self)
+    return if $game_map.enemies.empty?
+    $game_map.enemies.each {|enemy|
+      ax = @x - enemy.x
+      ay = @y - enemy.y
+      case @direction
+      when 2
+        if ax == 0 and ay == -1
+          enemy.damage_enemy(actor.atk) 
+          SceneManager.scene.spriteset.blood(enemy, @direction) if enemy.object.nil?
+        end
+      when 4
+        if ay == 0 and ax == 1
+          enemy.damage_enemy(actor.atk) 
+          SceneManager.scene.spriteset.blood(enemy, @direction) if enemy.object.nil?
+        end
+      when 6 
+        if ay == 0 and ax == -1
+          enemy.damage_enemy(actor.atk) 
+          SceneManager.scene.spriteset.blood(enemy, @direction) if enemy.object.nil?
+        end
+      when 8
+        if ax == 0 and ay == 1
+          enemy.damage_enemy(actor.atk) 
+          SceneManager.scene.spriteset.blood(enemy, @direction) if enemy.object.nil?
+        end
+      end
+    }
+  end
+  
+  def re_check_equipped_weapon
+    return if @equipped_weapon != nil
+    $weapons.each { |weapon|
+      if $game_party.members[0].equips.include?(weapon.weapon)
+        @equipped_weapon = weapon
+        @need_check = false
+        return
+      end
+    }
+    @need_check = false
+  end
+  
+  def reload(weapon)
+    $game_party.items.each { |item|
+      if item.id == weapon.magazine.id
+        $game_party.lose_item(weapon.magazine,1)
+        @equipped_weapon.bullets += @equipped_weapon.max
+        Audio.se_play("Audio/Se/#{weapon.wav_name}_reload", 100, 100)
+        @recover = @equipped_weapon.recover
+        return
+      end
+    }
+    Audio.se_play("Audio/Se/Buzzer1", 85, 100)
+    @recover = (@equipped_weapon.recover > 40 ? @equipped_weapon.recover : 45)
+  end
+  def movable?
+    $game_map.explosion_chars.compact!
+    return false if !$game_map.explosion_chars.empty?
+    abs_movable
+  end
+  def update_attack(bazooca = false)
+    $game_map.enemies.compact!
+    return if @kill_player
+    return if $game_party.members[0].weapons[0] == nil
+    re_check_equipped_weapon if @equipped_weapon == nil
+    return if @equipped_weapon.nil? or @equipped_weapon.class != Abs_Weapon
+    Audio.se_stop
+    Audio.se_play("Audio/Se/#{@equipped_weapon.wav_name}", 100, 100)
+    @equipped_weapon.bullets -= 1
+    @recover = @equipped_weapon.recover
+    range_x = {'pos' => [], 'neg' => []}
+    range_y = {'pos' => [], 'neg' => []}
+    SceneManager.scene.spriteset.shoot(self)
+    for i in 1..8
+      if (map_passable?(@x - i, @y, 4) or $game_map.counter?(@x - i, @y)) and $game_map.terrain_tag(@x - i, @y) != Terrain_Debug
+        range_x['pos'].push(i)
+      else
+        break; next
+      end
+    end
+    for i in 1..8
+      if (map_passable?(@x + i, @y, 6) or $game_map.counter?(@x + i, @y)) and $game_map.terrain_tag(@x + i, @y) != Terrain_Debug
+        range_x['neg'].push(i * (-1))
+      else
+        break; next
+      end
+    end
+    for i in 1..8
+      if (map_passable?(@x, @y - i, 8) or $game_map.counter?(@x, @y - i)) and $game_map.terrain_tag(@x, @y - i) != Terrain_Debug
+        range_y['pos'].push(i)
+      else
+        break; next
+      end
+    end
+    for i in 1..8
+      if (map_passable?(@x, @y + i, 2) or $game_map.counter?(@x, @y + i)) and $game_map.terrain_tag(@x, @y + i) != Terrain_Debug
+        range_y['neg'].push(i * (-1))
+      else
+        break; next
+      end
+    end
+    @new_enemies = []
+    $game_map.enemies.each do |enemy|
+      ax = @x - enemy.x
+      ay = @y - enemy.y
+      case @direction
+      when 2
+        if not ax != 0
+          if ay == -1
+            @new_enemies[0] = enemy
+          elsif ay == - 2
+            @new_enemies[1] = enemy
+          elsif ay == - 3
+            @new_enemies[2] = enemy
+          elsif ay == - 4
+            @new_enemies[3] = enemy
+          elsif ay == - 5
+            @new_enemies[4] = enemy
+          elsif ay == - 6
+            @new_enemies[5] = enemy
+          elsif ay == - 7
+            @new_enemies[6] = enemy
+          elsif ax == - 8
+            @new_enemies[7] = enemy
+          end
+        end
+      when 4
+        if not ay != 0
+          if ax == 1
+            @new_enemies[0] = enemy
+          elsif ax == 2
+            @new_enemies[1] = enemy
+          elsif ax == 3
+            @new_enemies[2] = enemy
+          elsif ax == 4
+            @new_enemies[3] = enemy
+          elsif ax == 5
+            @new_enemies[4] = enemy
+          elsif ax == 6
+            @new_enemies[5] = enemy
+          elsif ax == 7
+            @new_enemies[6] = enemy
+          elsif ax == 8
+            @new_enemies[7] = enemy
+          end
+        end
+      when 6
+        if not ay != 0
+          if ax == -1
+            @new_enemies[0] = enemy
+          elsif ax == - 2
+            @new_enemies[1] = enemy
+          elsif ax == - 3
+            @new_enemies[2] = enemy
+          elsif ax == - 4
+            @new_enemies[3] = enemy
+          elsif ax == - 5
+            @new_enemies[4] = enemy
+          elsif ax == - 6
+            @new_enemies[5] = enemy
+          elsif ax == - 7
+            @new_enemies[6] = enemy
+          elsif ax == - 8
+            @new_enemies[7] = enemy
+          end
+        end
+      when 8
+        if not ax != 0
+          if ay == 1
+            @new_enemies[0] = enemy
+          elsif ay == 2
+            @new_enemies[1] = enemy
+          elsif ay == 3
+            @new_enemies[2] = enemy
+          elsif ay == 4
+            @new_enemies[3] = enemy
+          elsif ay == 5
+            @new_enemies[4] = enemy
+          elsif ay == 6
+            @new_enemies[5] = enemy
+          elsif ay == 7
+            @new_enemies[6] = enemy
+          elsif ay == 8
+            @new_enemies[7] = enemy
+          end
+        end
+      end
+    end
+    @new_enemies.compact!; a = 0
+    @new_enemies.each do |enemy|
+      if @equipped_weapon.pierce == true
+        break if a >= Pierce_Enemies + @equipped_weapon.pierce_num
+      else
+        break if a >= Pierce_Enemies
+      end
+      next if not enemy.is_a?(Game_Event)
+      ax = @x - enemy.x
+      ay = @y - enemy.y
+      case @direction
+      when 2
+        if ax == 0
+          if range_y['neg'].include?(ay)
+            bazooca ? damage_area(enemy) : attack_enemy(enemy)
+            a += 1
+            next
+          else
+            @equipped_weapon.area ? miss_area(range_x, range_y) : miss; break
+          end
+        else
+          @equipped_weapon.area ? miss_area(range_x, range_y) : miss; break
+        end
+      when 4
+        if ay == 0
+          if range_x['pos'].include?(ax)
+            bazooca ? damage_area(enemy) : attack_enemy(enemy)
+            a += 1
+            next
+          else
+            @equipped_weapon.area ? miss_area(range_x, range_y) : miss; break
+          end
+        else
+          @equipped_weapon.area ? miss_area(range_x, range_y) : miss; break
+        end
+      when 6 
+        if ay == 0 
+          if range_x['neg'].include?(ax)
+            bazooca ? damage_area(enemy) : attack_enemy(enemy)
+            a += 1
+            next
+          else
+            @equipped_weapon.area ? miss_area(range_x, range_y) : miss; break
+          end
+        else
+          @equipped_weapon.area ? miss_area(range_x, range_y) : miss; break
+        end
+      when 8
+        if ax == 0
+          if range_y['pos'].include?(ay)
+            bazooca ? damage_area(enemy) : attack_enemy(enemy)
+            a += 1
+            next
+          else
+            @equipped_weapon.area ? miss_area(range_x, range_y) : miss; break
+          end
+        else
+          @equipped_weapon.area ? miss_area(range_x, range_y) : miss; break
+        end
+      end
+    end
+    @new_enemies.clear
+    if a == 0
+      @equipped_weapon.area ? miss_area(range_x, range_y) : miss
+    end
+  end
+  def miss_area(area_x, area_y)
+    @recover = @equipped_weapon.recover
+    now = @equipped_weapon.weapon.animation_id
+    anim_n = $data_animations[now].frames.size * 3
+    area_x['pos'].sort!; area_x['neg'].sort!
+    area_y['pos'].sort!; area_y['neg'].sort!
+    area_x['pos'].compact!; area_x['neg'].compact!
+    area_y['pos'].compact!; area_y['neg'].compact!
+    xis, yis = @x, @y
+    gm = $game_party.members[0]
+    pre_feito = gm.atk - gm.def
+    pre_feito = 0 if pre_feito <= 0
+    if not area_x['pos'].empty? or area_x['neg'].empty? or area_y['pos'].empty? or area_y['neg'].empty?
+      case @direction
+      when 2
+        if area_y['neg'][0].nil?; damage_hero(pre_feito); SceneManager.scene.spriteset.explode($game_player.x, $game_player.y); return; end
+        xis = @x; yis -= area_y['neg'][0]
+      when 4
+        a = area_x['pos'].size
+        if area_x['pos'][a - 1].nil?; damage_hero(pre_feito); SceneManager.scene.spriteset.explode($game_player.x, $game_player.y); return; end
+        yis = @y; xis -= area_x['pos'][a - 1]
+      when 6
+        if area_x['neg'][0].nil?; damage_hero(pre_feito); SceneManager.scene.spriteset.explode($game_player.x, $game_player.y); return; end
+        yis = @y; xis -= area_x['neg'][0]
+      when 8
+        a = area_y['pos'].size
+        if area_y['pos'][a - 1].nil?; damage_hero(pre_feito); SceneManager.scene.spriteset.explode($game_player.x, $game_player.y); return; end
+        xis = @x; yis -= area_y['pos'][a - 1]
+      end
+    else
+      return
+    end
+    xis = 0 if xis.nil?
+    yis = 0 if yis.nil?
+    SceneManager.scene.spriteset.area(self, xis, yis)
+    SceneManager.scene.spriteset.explode(xis,yis)
+    range = {}
+    range[:x] = [xis]; range[:y] = [yis]
+    for i in 0..1
+      range[:x].push(xis + i)
+      range[:y].push(yis + i)
+      range[:x].push(xis - i)
+      range[:y].push(yis - i)
+    end
+    range[:x] = range[:x] & range[:x]
+    range[:y] = range[:y] & range[:y]
+    range[:x].sort!; range[:y].sort!
+    print "range x = ",range[:x],"\n"
+    print "range y = ",range[:y],"\n\n"
+    $game_map.enemies.each {|enemy|
+      if range[:x].include?(enemy.x) and range[:y].include?(enemy.y)
+        print "enemy x = ",enemy.x," - enemy.y = ",enemy.y, "\n"
+        enemy.damage_enemy(pre_feito)
+      end
+    }
+    if range[:x].include?($game_player.x) and range[:y].include?($game_player.y)
+      $game_player.damage_hero(pre_feito)
+    end
+  end
+  def remove_bullets(qnt)
+    if @equipped_weapon.bullets - qnt < 0
+      @equipped_weapons.bullets = 0
+    else
+      @equipped_weapon.bullets -= qnt
+    end
+  end
+  def damage_area(enemy)
+    Audio.se_stop
+    Audio.se_play("Audio/Se/#{@equipped_weapon.wav_name}", 100, 100)
+    SceneManager.scene.spriteset.area(self, enemy.x, enemy.y)
+    SceneManager.scene.spriteset.explode(enemy.x, enemy.y)
+    xis, yis = enemy.x, enemy.y
+    area = {'X' => [], 'Y' => []}
+    area['X'].push(xis + 1)
+    area['X'].push(xis - 1)
+    area['Y'].push(yis + 1)
+    area['Y'].push(yis - 1)
+    area['X'].push(xis)
+    area['Y'].push(yis)
+    area['X'].sort!; area['Y'].sort!
+    $game_map.enemies.compact!
+    a = $game_map.enemies.compact; a.delete(enemy)
+    attack_enemy(enemy, true)
+    for enemi in a
+      if area['X'].include?(enemi.x) and area['Y'].include?(enemi.y)
+        attack_enemy(enemi, true)
+      end
+    end
+    Audio.se_play("Audio/Se/explosion1", 100, 100)
+  end
+  def miss
+    hero = $game_party.members[0]
+    @recover = @equipped_weapon.recover
+    
+  end
+  def shot_anim;end
+  def attack_enemy(event, bazooca = false)
+    hero = $game_party.members[0]
+    r = rand(10)
+    rand = r - 5
+    event.damage_enemy(hero.atk + rand)
+    if event.object.nil?
+      SceneManager.scene.spriteset.blood(event, @direction) if bazooca != true
+    end
+    @recover = @equipped_weapon.recover
+  end
+  def get_bullets(weapon)
+    if not weapon.bullets == weapon.max 
+      $game_party.lose_item(weapon.magazine, 1)
+      weapon.bullets += weapon.max
+    else
+      return
+    end
+  end
+  def damage_hero(value)
+    return if @kill_player
+    jump(0,0)
+    hero = $game_party.members[0]
+    value -= (rand(10) - 5)
+    value = 0 if value < 0
+    $game_map.damage_sprites.push(Damage_Sprite.new(self, value)) if Show_Damage_Sprites == true
+    if not value > hero.hp
+      hero.hp -= value
+    else
+      hero.hp = 1
+      @kill_player = true
+      RPG::SE.new(Player_Die_SE, 80).play
+    end
+  end
+  def update_kill
+    if @opacity > 0
+      @opacity -= Module_Of_Config::Opacity_Burn
+    else
+      SceneManager.goto(Scene_Gameover)
+    end
+  end
+end
+#----------------------------------------------------------------------------------#
+class Spriteset_Map
+  alias abs_initialize initialize
+  alias abs_update update
+  alias abs_dispose dispose
+  def initialize
+    $game_map.damage_sprites = []
+    $game_map.item_windows = []
+    $game_map.explosion_chars = []
+    @spritees = {}
+    abs_initialize
+  end
+  def update
+    abs_update
+    trash = []
+    trash2 = []
+    $game_map.damage_sprites.each do |sprite|
+      sprite.update
+      trash.push(sprite )if sprite.disposed?
+    end
+    if !$game_map.item_windows.empty?
+      if $game_map.item_windows[0].is_a?(Pop)
+        $game_map.item_windows[0].update
+        trash2.push($game_map.item_windows[0]) if $game_map.item_windows[0].disposed?
+      end
+    end
+    trash2.each { |item| $game_map.item_windows.delete(item) }
+    $game_map.item_windows.compact!
+    trash.each { |item| $game_map.damage_sprites.delete(item) }
+    trash2.clear; trash.clear
+    for char in $game_map.explosion_chars
+      char.update
+      char.my_sprite = Sprite_Character.new(@viewport1, char) if char.my_sprite.nil?
+      trash.push(char) if char.disposed?
+    end
+    trash.each { |item| $game_map.explosion_chars.delete(item) }
+  end
+  def dispose
+    abs_dispose
+    $game_map.damage_sprites.each do |sprite|
+      sprite.bitmap.dispose
+      sprite.dispose
+    end
+    $game_map.damage_sprites.clear
+    $game_map.item_windows.each do |window|
+      window.dispose
+    end
+    $game_map.item_windows.clear
+    $game_map.explosion_chars.each { |char| char.dispose }
+    $game_map.explosion_chars.clear
+  end
+end
+#----------------------------------------------------------------------------------#
+class Game_Party < Game_Unit
+  alias metodo_aliasado_com_sucesso gain_item
+  def gain_item(item, amount, include_equip = false)
+    times = $game_map.item_windows.size
+    $game_map.window(Pop.new(item))#, 150 * times))
+    metodo_aliasado_com_sucesso(item, amount, include_equip = false)
+  end
+end
+#----------------------------------------------------------------------------------#
+class Damage_Sprite < Sprite
+  def initialize(target, value)
+    super(nil)
+    @target = target
+    self.bitmap = Bitmap.new(100,20)
+    self.bitmap.draw_text(0,0,100,20,value,1)
+    self.ox = 50
+    self.z = 999
+    self.x = target.screen_x
+    self.y = target.screen_y - 40
+    @timer = 50
+  end
+  def update
+    if @timer > 0
+      @timer -= 1
+      self.y -= 1 if not self.y < @target.screen_y - 60
+    else
+      if self.opacity > 0
+        self.opacity -= 15
+        self.y -= 2
+      else
+        dispose
+      end
+    end
+  end
+  def dispose
+    self.bitmap.dispose
+    super
+  end
+end
+#----------------------------------------------------------------------------------#
+class Reward_Sprite < Sprite
+  def initialize(target, value)
+    super(nil)
+    @target = target
+    self.bitmap = Bitmap.new(100,20)
+    self.bitmap.font.color = Color.new(72,0,255)
+    self.bitmap.draw_text(0,0,100,20,value,1)
+    self.ox = 50
+    self.z = 999
+    self.x = target.screen_x - 5
+    self.y = target.screen_y - 40
+    @timer = 50
+  end
+  def update
+    if @timer > 0
+      @timer -= 1
+      self.zoom_x += 0.008
+      self.zoom_y += 0.008
+      self.y -= 1 if not self.y < @target.screen_y - 60
+    else
+      if self.opacity > 0
+        self.opacity -= 15
+        self.y -= 2
+      else
+        dispose
+      end
+    end
+  end
+  def dispose
+    self.bitmap.dispose
+    super
+  end
+end
+#----------------------------------------------------------------------------------#
+class Window_Ammo < Window_Base
+  def initialize
+    super(0,0,120,52)
+    self.contents = Bitmap.new(width - 32, height - 32)
+    if not $game_player.equipped_weapon == nil
+      self.contents.draw_text(2,0,120,20,"Ammo:" + $game_player.equipped_weapon.bullets.to_s)
+    end
+  end
+  def dispose
+    super
+  end
+end
+#----------------------------------------------------------------------------------#
+class Pop < Window_Base
+  def initialize(item)
+    if not item.nil?
+      super(0,355,175,60)
+      self.contents = Bitmap.new(width - 32, height - 32)
+      self.contents.draw_text(30,5,120,20, item.name)
+      draw_icon(item.icon_index, 5, 5)
+      @timer = 70
+      self.opacity = 0; self.visible = false
+    else
+      dispose if not self.disposed?
+    end
+  end
+  def update
+    return if self.disposed?
+    self.opacity = 255 if self.opacity != 255
+    self.visible = true if self.visible == false
+    @timer > 0 ? @timer -= 1 : dispose
+  end
+  def dispose
+    super
+  end
+end
+#----------------------------------------------------------------------------------#
+module DataManager
+  def self.make_save_contents
+    contents = {}
+    contents[:system]        = $game_system
+    contents[:timer]         = $game_timer
+    contents[:message]       = $game_message
+    contents[:switches]      = $game_switches
+    contents[:variables]     = $game_variables
+    contents[:self_switches] = $game_self_switches
+    contents[:actors]        = $game_actors
+    contents[:party]         = $game_party
+    contents[:troop]         = $game_troop
+    contents[:map]           = $game_map
+    contents[:player]        = $game_player
+    if $weapons != nil
+      $weapons.compact!
+      contents[:weapons]     = $weapons
+    end
+    contents
+  end
+  def self.extract_save_contents(contents)
+    $game_system        = contents[:system]
+    $game_timer         = contents[:timer]
+    $game_message       = contents[:message]
+    $game_switches      = contents[:switches]
+    $game_variables     = contents[:variables]
+    $game_self_switches = contents[:self_switches]
+    $game_actors        = contents[:actors]
+    $game_party         = contents[:party]
+    $game_troop         = contents[:troop]
+    $game_map           = contents[:map]
+    $game_player        = contents[:player]
+    $weapons            = contents[:weapons] if contents.has_key?(:weapons)
+    $weapons.compact!
+  end
+end
+#----------------------------------------------------------------------------------#
+class Explosion_Character < Game_Character
+  attr_accessor :my_sprite
+  def initialize(xis, yis, anim_id, anim_frames = 20)
+    super()
+    @identification = rand(200)
+    moveto(xis, yis)
+    @animation_id = anim_id
+    @timer = anim_frames
+    @timer = 20 if @timer <= 0
+    @disposed = false
+    update
+  end
+  def update
+    @my_sprite.update if @my_sprite.class == Sprite_Character
+    return if self.disposed?
+    super
+    if @timer > 0
+      @timer -= 1
+      @disposed = false
+    else
+      dispose
+    end    
+  end
+  def dispose
+    @my_sprite.dispose if @my_sprite.class == Sprite_Character
+    @timer = 0
+    @disposed = true
+  end
+  def disposed?; @disposed; end
+end
+#-----##-----##-----##-----##-----##-----##-----##-----##-----##-----##-----#
+# FIM ## FIM ## FIM ## FIM ## FIM ## FIM ## FIM ## FIM ## FIM ## FIM ## FIM #
+#-----##-----##-----##-----##-----##-----##-----##-----##-----##-----##-----#

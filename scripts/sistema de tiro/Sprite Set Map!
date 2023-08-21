@@ -1,0 +1,229 @@
+module Definitions
+    
+  Sprite_angles = {2=>[80,110,140,170],4=>[340,10,40,70],6=>[290,260,230,200],8=>[290,320,350,20]}
+  Move_correction = {2=>[-8,-10],4=>[0,-10],6=>[0,-4],8=>[4,-10]}
+  Sprite_z_values = { 2=>120, 4=>50, 6=>120, 8=>50}
+
+  Static_Angles = {2=>140,4=>40,6=>340,8=>350}
+  Static_Move = {2=>[-8,-14],4=>[0,-10],6=>[10,0],8=>[4,-10]}
+  Static_Z = { 2=>120, 4=>50, 6=>120, 8=>50}
+  Static_Mirror = {2 => false, 4=>false,6=>true,8=>false}
+end
+
+class Scene_Map < Scene_Base; attr_reader :spriteset; end
+
+class Spriteset_Map
+  
+  include Module_Of_Config
+  include Definitions
+  attr_accessor :smoke
+  
+  alias :mtm_initialize :initialize
+  def initialize
+    @explosions = []; @smoke = []; @floors = []; @particles = []; @parts = []
+    @array_weapons = {}; @weapons = {}
+    mtm_initialize
+  end
+  
+  alias :mtm_update :update
+  def update
+    update_explosions if !@explosions.empty?
+    update_smokes if !@smoke.empty?
+    update_particles if !@particles.empty?
+    update_parts if !@parts.empty?
+    update_array if !@array_weapons.empty?
+    trash = []
+    @floors.each { |sprite|
+      sprite.update
+      if sprite.disposed?
+        trash.push(sprite)
+      end
+    }
+    trash.each {|item| @floors.delete(item)}; trash.clear
+    if Show_Weapon_Sprites and $game_player.equipped_weapon != nil
+      update_vis_equip
+    end
+    mtm_update
+  end
+  
+  def update_vis_equip
+    if @weapons.keys.include?(:player)
+      sprite = @weapons[:player]; player = $game_player
+      sprite.update
+      sprite.x = player.screen_x + Static_Move[player.direction][0]
+      sprite.y = player.screen_y + Static_Move[player.direction][1]
+      sprite.angle = Static_Angles[player.direction]
+      sprite.z = Static_Z[player.direction]# - 15
+      sprite.mirror = Static_Mirror[player.direction]
+    else
+      icon = ($game_player.equipped_weapon.weapon.icon_index rescue nil)
+      return if icon.nil?
+      bitmap = Bitmap.new(24,24)
+      bitmap.blt(0,0,Cache.system("Iconset"),Rect.new(icon%16*24,icon/16*24,24,24))
+      sprite = Sprite.new(@viewport1)
+      sprite.ox, sprite.oy = 22,22
+      sprite.zoom_x, sprite.zoom_y = 0.85, 0.85
+      sprite.bitmap = bitmap
+      @weapons[:player] = sprite
+    end
+  end
+  
+  def update_array
+    trash = []
+    @array_weapons.each_with_index {|array, i|
+      update_array_weapon(array)
+      trash.push(@array_weapons[i]) if array[1][1] == false
+    }
+    trash.each {|item| @array_weapons.delete(item) }; trash.clear
+  end
+  
+  def update_array_weapon(array)
+    array[1][0].x = array[0].screen_x + Move_correction[array[0].direction][0]
+    array[1][0].y = array[0].screen_y + Move_correction[array[0].direction][1]
+    if !array[1][3]
+      case array[1][2]
+      when 12
+        array[1][0].angle = Sprite_angles[array[0].direction][0]
+        array[1][0].z = Sprite_z_values[array[0].direction] - 15
+      when 9
+        array[1][0].angle = Sprite_angles[array[0].direction][1]
+        array[1][0].z = Sprite_z_values[array[0].direction] - 15
+      when 6
+        array[1][0].angle = Sprite_angles[array[0].direction][2]
+        array[1][0].z = Sprite_z_values[array[0].direction] - 15
+      when 3
+        array[1][0].angle = Sprite_angles[array[0].direction][3]
+        array[1][0].z = Sprite_z_values[array[0].direction] - 15
+      when 0
+        array[1][1] = false
+        array[1][0].bitmap = nil
+      end
+    else
+      if array[1][2] > 0
+        array[1][0].angle = Sprite_angles[array[0].direction][2]
+        array[1][0].z = Sprite_z_values[array[0].direction] - 15
+      else
+        array[1][1] = false
+        array[1][0].bitmap = nil
+      end
+    end
+    array[1][0].update
+    array[1][2] -= 1
+  end
+  
+  alias :mtm_dispose :dispose
+  def dispose
+    @explosions.each {|sprite| sprite.dispose if not sprite.disposed? }
+    @explosions = nil
+    @smoke.each {|sprite| sprite.dispose if not sprite.disposed? }
+    @smoke = nil
+    @particles.each {|sprite| sprite.dispose if not sprite.disposed?}
+    @particles = nil
+    @parts.each {|sprite| sprite.dispose if not sprite.disposed?}
+    @parts = nil
+    if @weapons[:player].is_a?(Sprite)
+      @weapons[:player].dispose if not @weapons[:player].disposed?
+      @weapons[:player] = nil
+    end
+    mtm_dispose
+  end
+  
+  def blood(target, direction)
+    return unless Show_Blood_Anim
+    if target.is_a?(Game_Event)
+      return if target.not_blood
+    end
+    3.times { @particles.push(Particle_Sprites::Blood.new(target,direction, @viewport1)) }
+    @character_sprites.each {|sprite_character|
+      next if sprite_character.character != target
+      sprite_character.flash(Color.new(255,0,0), 30)
+      break
+    }
+  end
+  
+  def explode(x, y)
+    @explosions.push(Particle_Sprites::Explosion.new(x, y, @viewport1))
+    i = 0
+    loop { i += 1; break if i == 5}
+    for i in 0..Smokes - 1
+      @smoke.push(Particle_Sprites::Smoke.new(x, y, @viewport1))
+    end
+    if Floor
+      if @floors.empty?
+        @floors.push(Particle_Sprites::Floor.new(x, y, @viewport1))
+      else
+        if not @floors.any? {|floor| floor.event_x == x and floor.event_y == y}
+          @floors.push(Particle_Sprites::Floor.new(x, y, @viewport1))
+        end
+      end
+    end
+  end
+    
+  def weapon(character, icon_index)
+    return if character.nil?
+    return if icon_index == 0
+    icon = icon_index
+    bitmap = Bitmap.new(24,24)
+    bitmap.blt(0,0,Cache.system("Iconset"),Rect.new(icon%16*24,icon/16*24,24,24))
+    sprite = Sprite.new(@viewport1)
+    sprite.ox, sprite.oy = 22,22
+    sprite.bitmap = bitmap
+    @array_weapons[character] = [sprite,true,12,false]
+  end
+  
+  def melee(character)
+    RPG::SE.new("#{Melee_Wav_Name}", 80).play
+    @particles.push(Particle_Sprites::Melee.new(character, @viewport1))
+  end
+  
+  def area(attacker, final_x, final_y)
+    @particles.push(Particle_Sprites::Area.new(attacker ,final_x, final_y, @viewport1))
+  end
+  
+  def shoot(character)
+    @particles.push(Particle_Sprites::Shot.new(character, @parts, @viewport1))
+    if Show_Smoke_On_Fire
+      @smoke.push(Particle_Sprites::Smoke2.new(character, @viewport1))
+    end
+  end
+  
+  def update_explosions
+    trash = []
+    @explosions.each {|sprite|
+      sprite.update
+      trash.push(sprite) if sprite.disposed?
+    }
+    trash.each {|item| @explosions.delete(item)}
+    trash.clear
+  end
+  
+  def update_parts
+    trash = []
+    @parts.each {|sprite|
+      sprite.update
+      trash.push(sprite) if sprite.disposed?
+    }
+    trash.each {|item| @parts.delete(item)}
+    trash.clear
+  end
+  
+  def update_smokes
+    trash = []
+    @smoke.each {|sprite|
+      sprite.update
+      trash.push(sprite) if sprite.disposed?
+    }
+    trash.each {|item| @smoke.delete(item)}
+    trash.clear
+  end
+  
+  def update_particles
+    trash = []
+    @particles.each {|sprite|
+      sprite.update
+      trash.push(sprite) if sprite.disposed?
+    }
+    trash.each {|item| @particles.delete(item)}
+    trash.clear
+  end
+end

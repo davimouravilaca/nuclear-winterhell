@@ -1,0 +1,110 @@
+#==============================================================================
+# Resident Evil Like Weapons System
+#==============================================================================
+#------------------------------------------------------------------------------
+# Créditos: Leon-S.K --- ou --- Andre Luiz Marques Torres Micheletti
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# HUD
+#------------------------------------------------------------------------------
+module Hud_Config
+  
+  #------------------------------------------------------------------------------
+  # CONFIGURAÇÕES GERAIS
+  #------------------------------------------------------------------------------
+  Switch = 2        # Id da Switch que ativa\desativa a HUD
+  Show_Key = :Z     # Tecla que mostra\esconde a HUD
+  #------------------------------------------------------------------------------
+  # Fim das Configurações
+  #------------------------------------------------------------------------------
+end
+#==============================================================================
+  
+  #------------------------------------------------------------------------------
+  # AREA NAO EDITAVEl!
+  #------------------------------------------------------------------------------
+
+class Hud < Window_Base
+  
+  attr_accessor :hp
+  attr_accessor :mp
+  attr_accessor :ammo
+  
+  def initialize
+    super(0,0,250,300)
+    self.contents = Bitmap.new(width - 32, height - 32)
+    self.opacity = 0
+    @hp = $game_party.members[0].hp
+    @maxhp = $game_party.members[0].mhp
+    if $game_player.equipped_weapon != nil
+      @ammo = $game_player.equipped_weapon.bullets
+      @mags =  $game_party.item_number($game_player.equipped_weapon.magazine)
+    end
+    self.z = 999
+    self.contents.font.color = Color.new(229,191,0)
+    refresh
+  end
+  
+  def refresh
+    @hp = $game_party.members[0].hp
+    @maxhp = $game_party.members[0].mhp
+    if $game_player.equipped_weapon != nil
+      @ammo = $game_player.equipped_weapon.bullets
+      @mags =  $game_party.item_number($game_player.equipped_weapon.magazine)
+    end
+    @wb = 149 * @hp / @maxhp
+    self.contents.clear
+    self.contents.fill_rect(0,8,151,11,Color.new(255,216,0))
+    self.contents.fill_rect(1,9,149,9,Color.new(0,0,0))
+    self.contents.gradient_fill_rect(1,9,@wb,9,Color.new(205,101,0),Color.new(0,89,0))
+    self.contents.draw_text(0,8,151,21,"HP",1)
+    if $game_player.equipped_weapon != nil
+      self.contents.draw_text(0,31,120,20,@ammo.to_s)
+      draw_icon(967, 16, 31)
+      self.contents.draw_text(100,31,120,20,@mags.to_s) if not @mags.nil?
+      draw_icon($game_player.equipped_weapon.iconset_id, 116, 30)
+    end
+  end
+  
+  def dispose
+    super
+  end
+end
+
+class Scene_Map < Scene_Base
+  
+  include Hud_Config
+  attr_accessor :hud
+    
+  alias hud_start start
+  def start
+    hud_start
+    if $game_switches[Switch] == true
+      @hud = Hud.new
+    end
+  end
+  
+  alias hud_update update
+  def update
+    hud_update
+    if Input.trigger?(Show_Key)
+      $game_switches[Switch] ? $game_switches[Switch] = false : $game_switches[Switch] = true
+    end
+    if $game_switches[Switch] == true
+      @hud.nil? ? @hud = Hud.new : refresh_hud
+    else
+      if not @hud.nil?; @hud.dispose; @hud = nil; end
+    end
+  end
+  
+  def refresh_hud
+    @hud.refresh if $game_party.members[0].hp != @hud.hp or $game_party.members[0].mp != @hud.mp or @hud.ammo != $game_player.equipped_weapon.bullets
+  end
+  
+  alias hud_terminate terminate
+  def terminate
+    @hud.dispose if @hud != nil
+    hud_terminate
+  end
+end
