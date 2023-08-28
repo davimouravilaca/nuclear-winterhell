@@ -25,3 +25,10 @@ cutscene 1: o protagonista está na janela assistindo a chuva cair quando de rep
 missão 1:
 o gerador irá começar a dar defeito e nosso heroi entao deverá sair da fazenda para verificar, no entanto por causa disso a radiação começa a afetar dentro da fazenda causando tremores e tempestades de acido que crescem quanto mais o jogador avança na missão ao chegar nos geradores é encontrado vários animais estranhos e o player devera mata-los. Após matalos o player devera consertar os geradores enquanto defendese de inimigos, tem que conseguir consertar todos os quatro geradores rapido pra avançar pois se não perde o progresso e tem que reconsertar os geradores.
 Depois de derrotados os inimigos é descoberto que a gasolina está acabando então nosso player deverá partir para coletar alem de tentar descobrir o que causou os geradores terem estragado
+
+ponto de divergencia:
+havera um obstaculo talvez um portao ou algo do tipo. Tera 3 opcoes para escolha de como resolver o problema.
+1 - Hackear os terminais espalhados pelo mapa e abrir o portão (puzzle) - quantum analist
+2- Coletar recursos pelo mapa e contruir uma modificação da escopeta para causar dano explosivo e destruir o portão. - glitch farmer
+3- Não sei mas talvez seja matar todos os inimigos pra conseguir uma credencial ou algo do tipo. - void hunter
+Três formas diferentes de resolver o problema que vão adicionar xp a classe dependendo da escolha.
