@@ -13,6 +13,10 @@ quantum analist: habilidades focadas em hacking
 
 itens: 
 cigarro marlboro: recuperação de vida
+isqueiro: necessario pra acender o marlboro
+
+elementos do mapa: 
+trem fantasma: existe um trem que passa por todo mapa ele é 100% automatico e movido a energia nuclear então ele não irá parar de funcionar nunca.
 
 lore: em 2042 um evento misterioso fez com que todas as ogivas nucleares do mundo fossem acionadas simultaneamente causando a destruição global do planeta. Muito tempo depois surgiram-se algumas comunidades de sobreviventes que desenvolveram uma tecnologia que e capaz de criar bolhas anti radiação onde puderam-se plantar e coisas do tipo, essa tecnologia funciona a partir de geradores e por isso a gasolina é muito importante pra essa nova civilação. Enquanto isso muitos seres estranhos habitam fora dessas zonas seguras. Facções inimigas etc. Os void hunters tem a missão de explorar as ruinas do mundo com intenção de capturar recursos para a comunidade entretanto eles enfrentam diversos perigos. 
 
@@ -32,3 +36,19 @@ havera um obstaculo talvez um portao ou algo do tipo. Tera 3 opcoes para escolha
 2- Coletar recursos pelo mapa e contruir uma modificação da escopeta para causar dano explosivo e destruir o portão. - glitch farmer
 3- Não sei mas talvez seja matar todos os inimigos pra conseguir uma credencial ou algo do tipo. - void hunter
 Três formas diferentes de resolver o problema que vão adicionar xp a classe dependendo da escolha.
+
+VilãO:
+O jogo terá ao todo 3 vilões com diferentes caracteristicas objetivos e visão de mundo. Sendo um deles um borderline psicotico que te perseguirá o jogo todo não com a intenção de te 
+matar somente mas sim foder com sua vida o quanto puder.
+Vilão 1 (Sem nome por enquanto)
+Aparência. Usa um uniforme da SS e possui metade do rosto queimado. Ele um dia foi um soldado da preguerra que exterminou uma família inteira a mando do seu superior.
+Ele não precisava fazer isso na verdade mas acabou o fazendo, nisso ele incinerou todas aquelas pessoas mas uma vitima conseguiu queimar seu rosto antes de morrer. Esse evento deixou ele completamente perturbado e hoje não sente mais remorso ao tirar vidas. Na verdade hoje seu objetivo e causar
+dor a quantas pessoas ele puder pois para ele a humanidade são todos vermes e merecem todo tipo de dor que vier, inclusive ele mesmo.
+Aparição:
+Vai acontecer algum episodio onde o protagonista vai matar um cachorro. Esse cachorro era do vilão ele então rastreia vc e acha a sua fazenda. Ele então queima tudo lá enquanto vc está fora. 
+Daí pra frente ele vai te prejudicar sempre que puder enquanto vc tenta reconstruir sua vila.
+
+
+final:
+não sei ainda mas meio que o protagonista terá de evitar um segundo grande expurgo que implodira o planeta como um todo e causará grande impacto no sistema solar talvez o destruindo.
+no meio da gameplay vai ter uma velha vidente que contará o futuro que ninguem ficara feliz com o que ele fez (salvar o mundo) e ninguem ira lhe dar os parabens ele só vai fazer o que acha que deve ser feito e irá prestar contas por isso. Depois de ver o futuro que lhe espera o player pode ter a chance de alterar o destino e destruir o mundo para sempre.
