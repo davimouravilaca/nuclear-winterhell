@@ -1,19 +1,20 @@
 ### **nome**: nuclear winterhell
 **sobre**: rpg com tematica posapocaliptica inspirada em mad max e fallout
-
+********
 #### **sistemas**: 
 * **seleção de classes**: as classes serão desenvolvidas ao longo do game. se vc selecionar por exemplo a classe void hunter vc não será um void hunter apenas receberá as missões com objetivo de se tornar um.
 * sistema de crafting e coleta de recursos etc.
 * seleção de equipamentos e etc.
 
 #### classes:
-* ***void hunter**: habilidades focadas em caça
-* ***glitch farmer**: habilidades focadas em crafting 
-* ***quantum analist**: habilidades focadas em hacking
+* **void hunter**: habilidades focadas em caça
+* **glitch farmer**: habilidades focadas em crafting 
+* **quantum analist**: habilidades focadas em hacking
 
 #### itens: 
 * **cigarro marlboro**: recuperação de vida (Nesse universo o ar se tornou tão podre que a nicotina é saudável para o pulmão)
-* **isqueiro**: necessario pra acender o marlboro
+* **isqueiro**: necessario pra acender o marlboro montar acampamento (salvar o game) entre outros.
+* **vodka russa:** Novas opções de diálogo secretas são liberadas. Deixa o jogo com efeitos visuais malucos e atrai zumbis devido ao cheiro. Tem a chance de coisas malucas acontecerem como o jogo todo ficar em russo e o player spawnar em lugares aleatorios depois de passar o efeito por exemplo. Te dá força e vitalidade por um período porém tudo é esquecido depois (o player apaga e perde uma porcentagem do xp e dinheiro ganho durante o efeito).  
 
 **elementos do mapa:** 
 **trem fantasma**: existe um trem que passa por todo mapa ele é 100% automatico e movido a energia nuclear então ele não irá parar de funcionar nunca.
@@ -38,15 +39,27 @@ havera um obstaculo talvez um portao ou algo do tipo. Tera 3 opcoes para escolha
 3.  Não sei mas talvez seja matar todos os inimigos pra conseguir uma credencial ou algo do tipo. - void hunter
 _Três formas diferentes de resolver o problema que vão adicionar xp a classe dependendo da escolha._
 
-**Vilão**:
-O jogo terá ao todo 3 vilões com diferentes caracteristicas objetivos e visão de mundo. Sendo um deles um borderline psicotico que te perseguirá o jogo todo não com a intenção de te 
+**Vilões**:
+O jogo terá ao todo 3 vilões com diferentes caracteristicas objetivos e visão de mundo.. Sendo um deles um borderline psicotico que te perseguirá o jogo todo não com a intenção de te 
 matar somente mas sim foder com sua vida o quanto puder.
+_Cada vilão pode ser derrotado de 3 maneiras diferentes de acordo com a classe_
+
 **Vilão 1 (Sg. Weiss von Schornstein):**
 **Aparência**. Usa um uniforme da SS e possui metade do rosto queimado. Ele um dia foi um soldado da preguerra que exterminou uma família inteira a mando do seu superior.
 Schornstein não precisava fazer isso na verdade mas acabou o fazendo, nisso ele incinerou todas aquelas pessoas mas uma vitima conseguiu queimar seu rosto antes de morrer. Esse evento deixou ele completamente perturbado e hoje não sente mais remorso ao tirar vidas. Na verdade hoje seu objetivo e causar dor a quantas pessoas ele puder pois para ele a humanidade são todos vermes e merecem todo tipo de dor que vier, inclusive ele mesmo.
 **Aparição**:
 Vai acontecer algum episodio onde o protagonista vai matar um cachorro. Esse cachorro era do vilão ele então rastreia vc e acha a sua fazenda. Ele então queima tudo lá enquanto vc está fora. 
 Daí pra frente ele vai te prejudicar sempre que puder enquanto vc tenta reconstruir sua vila.
+**Bossfight:**
+Terá uma bossfight contra o Sg.Weiss também conhecido como a Aparição. É impossivel derrotalo. O player irá levar um tiro e enquanto luta o personagem irá perdendo vida. O boss não ataca apenas desvia dos tiros mas eventualmente o player perdera por sangramento. Depois disso terá uma cutscene.
+**Cutscene:**
+O player cai no chão, a Aparição se aproxima e ela acende um marcador de boi e queima o rosto do jogador. Depois disso o player começará a ter pesadelos com a Aparição.
+Sg. Weiss tem uma aparencia secreta que é a forma de um demonio que aparece nos sonhos e ficará perturbando o jogador de tempos em tempos. Ele uma vez fez um pacto com o diabo e ele precisa entregar almas a satã para receber seus poderes. Depois é revelado que seu objetivo é matar toda a humanidade mas ele mesmo tendo a chance de matar o player varias vezes não o faz pq ele quer forçalo a entender o quanto o mundo precisa acabar e quer que ele mesmo o faça, então ele irá tirar toda a força de vontade do player até que ele desista e acabe com tudo.
+**Ideias:**
+O player terá alucinações com ele queimando a vila antes que isso de fato aconteça depois que o player é marcado. Pessoas comentam sobre ele sendo uma lenda antes dele aparecer. O player perde tudo depois da bossfight, o jogo fica mais dificil. Terá alucinações com a Aparição e ela fica tocando guitarra no meio de algumas lutas importantes. 
+
+**Vilão 2 (Sem nome Por enquanto):**
+É o mastermind por causa de tudo. A muito tempo atrás ele era um bilionario obcecado pela ideia da vida eterna então ele transferiu sua consciencia pra uma rede de computadores. No final ele se arrependeu e hoje ele implora pra morrer. Ele que financiou os cultistas e seu objetivo agora é destruir o planeta pra poder ter paz de espirito e descansar em paz. Sg. Weiss trabalha pra ele mas apenas pq seus interesses são os mesmos, futuramente algo irá acontecer e o player e a Aparição lutarão juntos contra ele.
 
 **final**: (Pode e irá mudar)
 não sei ainda mas meio que o protagonista terá de evitar um segundo grande expurgo que implodira o planeta como um todo e causará grande impacto no sistema solar talvez o destruindo.
