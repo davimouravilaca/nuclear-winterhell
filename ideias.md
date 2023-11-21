@@ -64,3 +64,15 @@ O player terá alucinações com ele queimando a vila antes que isso de fato aco
 **final**: (Pode e irá mudar)
 não sei ainda mas meio que o protagonista terá de evitar um segundo grande expurgo que implodira o planeta como um todo e causará grande impacto no sistema solar talvez o destruindo.
 no meio da gameplay vai ter uma velha vidente que contará o futuro que ninguem ficara feliz com o que ele fez (salvar o mundo) e ninguem ira lhe dar os parabens ele só vai fazer o que acha que deve ser feito e irá prestar contas por isso. Depois de ver o futuro que lhe espera o player pode ter a chance de alterar o destino e destruir o mundo para sempre.
+
+
+#### Gangues:
+Fora da safezone existem muitas gangues perigosas e insanas que disputam entre si o dominio de territorios onde se encontram recursos, cada area tem dominio de uma facção especifica dentre elas podemos mencionar:
+* **Os Encapuzados:** antigo grupo de cultistas, eles acreditam que a Aparição seria um fruto da explosão atomica que trouxe o apocalipse para a terra, uma criatura divina que nasceu para expurgar os pecados que a bomba não consumiu. Eles são caracterizados por usarem capuzes e mascaras de animais e elementos de satanismo etc. Extremamente perigosos e territorialistas.
+  **Território:** Uma floresta radioativa onde ficava uma certa usina nuclear.
+   **Aliados:** Milicia.
+   **Inimigos:** Nenhum.
+*  **Os Encouraçados:** dominam o ferro velho da cidade, se vestem com armaduras pesadas de ferro e se armam com todo tipo de tranqueira possivel, extremamente perigosos e resistentes. Alguns se vestem como samurais sabe deus lá por que.
+  **Território:** Ferro velho.
+  **Aliados:** Os Renegados, Os Motoqueiros.
+   **Principais inimigos** Milicia.
